@@ -1,6 +1,8 @@
 package SaverchenkoGroup10Lab4VarC2;
 
 import javax.swing.*;
+import javax.swing.event.MenuEvent;
+import javax.swing.event.MenuListener;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
@@ -10,6 +12,12 @@ public class MainFrame extends JFrame {
 
     private static final int WIDTH = 500;
     private static final int HEIGHT = 500;
+
+    JMenuItem modify;
+    JMenuItem modifyCondition;
+    JMenuItem showGrid;
+    JMenuItem turnLeft;
+
     private JFileChooser fileChooser = null;
     private boolean fileLoaded = false;
 
@@ -27,6 +35,7 @@ public class MainFrame extends JFrame {
         setJMenuBar(menuBar);
         JMenu file = menuBar.add(new JMenu("Файл"));
         JMenu graphics = menuBar.add(new JMenu("График"));
+        graphics.addMenuListener(new GraphicsMenuListener());
         JMenuItem open = file.add(new JMenuItem("Открыть файл с графиком"));
         open.setAccelerator(KeyStroke.getKeyStroke("ctrl O"));
         open.addActionListener(new ActionListener() {
@@ -37,6 +46,42 @@ public class MainFrame extends JFrame {
                 }
                 if (fileChooser.showOpenDialog(MainFrame.this) == JFileChooser.APPROVE_OPTION)
                     openGraphics(fileChooser.getSelectedFile());
+            }
+        });
+
+        JMenuItem close = file.add(new JMenuItem("Выход"));
+        close.setAccelerator(KeyStroke.getKeyStroke("ctrl E"));
+        close.addActionListener(new ActionListener() {
+            public void actionPerformed(ActionEvent e) {
+                System.exit(0);
+            }
+        });
+
+        modify = graphics.add(new JCheckBoxMenuItem("Модификация отображения"));
+        modify.addActionListener(new ActionListener() {
+            public void actionPerformed(ActionEvent e) {
+
+            }
+        });
+
+        modifyCondition = graphics.add(new JCheckBoxMenuItem("Модификация отображения с условием"));
+        modifyCondition.addActionListener(new ActionListener() {
+            public void actionPerformed(ActionEvent e) {
+
+            }
+        });
+
+        turnLeft = graphics.add(new JCheckBoxMenuItem("Поворот влево на 90°"));
+        turnLeft.addActionListener(new ActionListener() {
+            public void actionPerformed(ActionEvent e) {
+
+            }
+        });
+
+        showGrid = graphics.add(new JCheckBoxMenuItem("Показать сетку"));
+        showGrid.addActionListener(new ActionListener() {
+            public void actionPerformed(ActionEvent e) {
+
             }
         });
     }
@@ -52,12 +97,7 @@ public class MainFrame extends JFrame {
                 in.skipBytes(2*(Double.SIZE/8));
                 graphicsData[i++] = new Double[]{x, y};
             }
-            for (int k =0; k<graphicsData.length; k++)
-            {
-                for (int j = 0; j<graphicsData[0].length; j++)
-                    System.out.print(graphicsData[k][j]+" ");
-                System.out.println();
-            }
+
             if (graphicsData.length > 0)
                 fileLoaded = true;
 
@@ -76,5 +116,19 @@ public class MainFrame extends JFrame {
         MainFrame frame = new MainFrame();
         frame.setDefaultCloseOperation(EXIT_ON_CLOSE);
         frame.setVisible(true);
+    }
+
+    private class GraphicsMenuListener implements MenuListener {
+
+        public void menuSelected(MenuEvent e) {
+            turnLeft.setEnabled(fileLoaded);
+            modify.setEnabled(fileLoaded);
+            modifyCondition.setEnabled(fileLoaded);
+            showGrid.setEnabled(fileLoaded);
+        }
+
+        public void menuDeselected(MenuEvent e) {}
+
+        public void menuCanceled(MenuEvent e) {}
     }
 }
