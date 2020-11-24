@@ -17,9 +17,13 @@ public class MainFrame extends JFrame {
     JMenuItem modifyCondition;
     JMenuItem showGrid;
     JMenuItem turnLeft;
+    JMenuItem showAxis;
+    JMenuItem setToDefault;
 
     private JFileChooser fileChooser = null;
     private boolean fileLoaded = false;
+    GraphicsDisplay display = new GraphicsDisplay();
+    GraphicsMenuListener menu = new GraphicsMenuListener();
 
     public MainFrame() {
 
@@ -48,12 +52,20 @@ public class MainFrame extends JFrame {
                     openGraphics(fileChooser.getSelectedFile());
             }
         });
-
         JMenuItem close = file.add(new JMenuItem("Выход"));
         close.setAccelerator(KeyStroke.getKeyStroke("ctrl E"));
         close.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent e) {
                 System.exit(0);
+            }
+        });
+
+        showAxis = graphics.add(new JCheckBoxMenuItem("Показать оси"));
+        showAxis.setSelected(true);
+        showAxis.addActionListener(new ActionListener() {
+            public void actionPerformed(ActionEvent e) {
+                display.setShowAxis(false);
+
             }
         });
 
@@ -84,6 +96,19 @@ public class MainFrame extends JFrame {
 
             }
         });
+
+        setToDefault = graphics.add(new JMenuItem("Отменить все изменения"));
+        setToDefault.setEnabled(false);
+        setToDefault.addActionListener(new ActionListener() {
+            public void actionPerformed(ActionEvent e) {
+                menu.menuGlobal(false);
+                setToDefault.setEnabled(false);
+            }
+        });
+    }
+
+    public void menuStatus (){
+        setToDefault.setEnabled(menu.atLeastOne());
     }
 
     protected void openGraphics (File selectedFile) {
@@ -98,8 +123,10 @@ public class MainFrame extends JFrame {
                 graphicsData[i++] = new Double[]{x, y};
             }
 
-            if (graphicsData.length > 0)
+            if (graphicsData.length > 0) {
                 fileLoaded = true;
+                display.showGraphics(graphicsData);
+            }
 
             in.close();
 
@@ -116,6 +143,8 @@ public class MainFrame extends JFrame {
         MainFrame frame = new MainFrame();
         frame.setDefaultCloseOperation(EXIT_ON_CLOSE);
         frame.setVisible(true);
+        while(frame.isVisible())
+            frame.menuStatus();
     }
 
     private class GraphicsMenuListener implements MenuListener {
@@ -125,6 +154,22 @@ public class MainFrame extends JFrame {
             modify.setEnabled(fileLoaded);
             modifyCondition.setEnabled(fileLoaded);
             showGrid.setEnabled(fileLoaded);
+        }
+
+        public void menuGlobal(boolean off){
+            turnLeft.setSelected(off);
+            modify.setSelected(off);
+            modifyCondition.setSelected(off);
+            showGrid.setSelected(off);
+            showAxis.setSelected(!off);
+        }
+
+        public boolean atLeastOne(){
+            if (turnLeft.isSelected() || modify.isSelected())
+                return true;
+            else if (!showAxis.isSelected())
+                return true;
+            else return modifyCondition.isSelected() || showGrid.isSelected();
         }
 
         public void menuDeselected(MenuEvent e) {}
