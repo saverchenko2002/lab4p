@@ -3,6 +3,7 @@ package SaverchenkoGroup10Lab4VarC2;
 import javax.swing.*;
 import javax.swing.event.MenuEvent;
 import javax.swing.event.MenuListener;
+import javax.swing.filechooser.FileNameExtensionFilter;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
@@ -46,7 +47,9 @@ public class MainFrame extends JFrame {
             public void actionPerformed(ActionEvent e) {
                 if (fileChooser == null) {
                     fileChooser = new JFileChooser();
-                    fileChooser.setCurrentDirectory(new File("C:\\Users\\SergeySaber\\IdeaProjects\\lab3p"));
+                    fileChooser.setCurrentDirectory(new File("C:\\Users\\SergeySaber\\IdeaProjects\\untitled"));
+                    FileNameExtensionFilter filter = new FileNameExtensionFilter("bin files", "bin");
+                    fileChooser.setFileFilter(filter);
                 }
                 if (fileChooser.showOpenDialog(MainFrame.this) == JFileChooser.APPROVE_OPTION)
                     openGraphics(fileChooser.getSelectedFile());
@@ -64,22 +67,21 @@ public class MainFrame extends JFrame {
         showAxis.setSelected(true);
         showAxis.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent e) {
-                display.setShowAxis(false);
-
+                display.setShowAxis(showAxis.isSelected());
             }
         });
 
         modify = graphics.add(new JCheckBoxMenuItem("Модификация отображения"));
         modify.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent e) {
-
+                display.setShowMarkers(modify.isSelected());
             }
         });
 
         modifyCondition = graphics.add(new JCheckBoxMenuItem("Модификация отображения с условием"));
         modifyCondition.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent e) {
-
+                display.setShowMarkersCondition(modifyCondition.isSelected());
             }
         });
 
@@ -105,10 +107,20 @@ public class MainFrame extends JFrame {
                 setToDefault.setEnabled(false);
             }
         });
+        getContentPane().add(display, BorderLayout.CENTER);
+
     }
 
     public void menuStatus (){
+
         setToDefault.setEnabled(menu.atLeastOne());
+        if (modify.isSelected())
+            modifyCondition.setEnabled(true);
+        else {
+            modifyCondition.setSelected(false);
+            modifyCondition.setEnabled(false);
+            display.setShowMarkersCondition(false);
+        }
     }
 
     protected void openGraphics (File selectedFile) {
@@ -125,6 +137,7 @@ public class MainFrame extends JFrame {
 
             if (graphicsData.length > 0) {
                 fileLoaded = true;
+                menu.menuGlobal(false);
                 display.showGraphics(graphicsData);
             }
 
@@ -152,15 +165,17 @@ public class MainFrame extends JFrame {
         public void menuSelected(MenuEvent e) {
             turnLeft.setEnabled(fileLoaded);
             modify.setEnabled(fileLoaded);
-            modifyCondition.setEnabled(fileLoaded);
+            modifyCondition.setEnabled(false);
             showGrid.setEnabled(fileLoaded);
         }
 
         public void menuGlobal(boolean off){
             turnLeft.setSelected(off);
             modify.setSelected(off);
+            display.setShowMarkers(off);
             modifyCondition.setSelected(off);
             showGrid.setSelected(off);
+            display.setShowAxis(!off);
             showAxis.setSelected(!off);
         }
 
