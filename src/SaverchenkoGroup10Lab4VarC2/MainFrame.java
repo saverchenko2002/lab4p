@@ -88,14 +88,14 @@ public class MainFrame extends JFrame {
         turnLeft = graphics.add(new JCheckBoxMenuItem("Поворот влево на 90°"));
         turnLeft.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent e) {
-
+                display.setTurnGraph(turnLeft.isSelected());
             }
         });
 
         showGrid = graphics.add(new JCheckBoxMenuItem("Показать сетку"));
         showGrid.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent e) {
-
+                display.setShowGrid(showGrid.isSelected());
             }
         });
 
@@ -175,6 +175,8 @@ public class MainFrame extends JFrame {
             display.setShowMarkers(off);
             modifyCondition.setSelected(off);
             showGrid.setSelected(off);
+            display.setTurnGraph(off);
+            turnLeft.setSelected(off);
             display.setShowAxis(!off);
             showAxis.setSelected(!off);
         }

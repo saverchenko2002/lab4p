@@ -3,13 +3,12 @@ package SaverchenkoGroup10Lab4VarC2;
 import javax.swing.*;
 import java.awt.*;
 import java.awt.font.FontRenderContext;
-import java.awt.geom.GeneralPath;
-import java.awt.geom.Line2D;
-import java.awt.geom.Point2D;
+import java.awt.geom.*;
 
 public class GraphicsDisplay extends JPanel {
 
     private Double[][] graphicsData;
+    private final int countDiv = 20;
 
     private boolean showAxis = true;
     private boolean showMarkers = false;
@@ -21,6 +20,7 @@ public class GraphicsDisplay extends JPanel {
     private BasicStroke modifiedGraphicsStroke;
     private BasicStroke markerStroke;
     private BasicStroke graphicsStroke;
+    private BasicStroke gridStroke;
 
     private Font axisFont;
 
@@ -30,6 +30,8 @@ public class GraphicsDisplay extends JPanel {
     private double maxY;
 
     private double scale;
+    private  double scaleX;
+    private  double scaleY;
 
     public GraphicsDisplay () {
 
@@ -44,7 +46,8 @@ public class GraphicsDisplay extends JPanel {
         axisStroke = new BasicStroke(2f,BasicStroke.CAP_BUTT, BasicStroke.JOIN_MITER);
         axisFont = new Font(Font.SANS_SERIF, Font.PLAIN, 36);
         modifiedGraphicsStroke = new BasicStroke(3f, BasicStroke.CAP_ROUND, BasicStroke.JOIN_ROUND, 10f,new float[] {18,5,5,5,12,5,5,5}, 0f);
-        markerStroke = new BasicStroke(1.5f);
+        markerStroke = new BasicStroke(1f);
+        gridStroke = new BasicStroke(1f,BasicStroke.CAP_BUTT,BasicStroke.JOIN_BEVEL, 10f, new float[]{1}, 0f);
     }
 
     public void showGraphics(Double[][] graphicsData) {
@@ -96,21 +99,39 @@ public class GraphicsDisplay extends JPanel {
             }
         }
 
-        double scaleX = getSize().getWidth() / (maxX - minX); //500/1
-        double scaleY = getSize().getHeight() / (maxY - minY); //500/16
+        if (turnGraph) {
+            scaleX = getSize().getHeight() / (maxX - minX);
+            scaleY = getSize().getWidth() / (maxY - minY);
+            scale = Math.min(scaleX, scaleY);
 
-        scale = Math.min(scaleX, scaleY);
+            if (scale == scaleY) {
+                double xIncrement = (getSize().getHeight()/scale - (maxX - minX))/2;
+                maxX += xIncrement;
+                minX -= xIncrement;
+            }
 
-        if (scale == scaleY) {
-            double xIncrement = (getSize().getWidth()/scale - (maxX - minX))/2;
-            maxX += xIncrement;
-            minX -= xIncrement;
+            if (scale == scaleX) {
+                double yIncrement = (getSize().getWidth()/scale - (maxY - minY))/2;
+                maxY += yIncrement;
+                minY -= yIncrement;
+            }
         }
+        else {
+            scaleX = getSize().getWidth() / (maxX - minX);
+            scaleY = getSize().getHeight() / (maxY - minY);
+            scale = Math.min(scaleX, scaleY);
 
-        if (scale == scaleX) {
-            double yIncrement = (getSize().getHeight()/scale - (maxY - minY))/2;
-            maxY += yIncrement;
-            minY -= yIncrement;
+            if (scale == scaleY) {
+                double xIncrement = (getSize().getWidth()/scale - (maxX - minX))/2;
+                maxX += xIncrement;
+                minX -= xIncrement;
+            }
+
+            if (scale == scaleX) {
+                double yIncrement = (getSize().getHeight()/scale - (maxY - minY))/2;
+                maxY += yIncrement;
+                minY -= yIncrement;
+            }
         }
 
         Graphics2D canvas = (Graphics2D) g;
@@ -119,9 +140,11 @@ public class GraphicsDisplay extends JPanel {
         Paint oldPaint = canvas.getPaint();
         Font oldFont = canvas.getFont();
 
+        if (turnGraph) rotatePanel(canvas);
         if (showAxis) paintAxis(canvas);
         paintGraphics(canvas);
         if (showMarkers) paintMarkers(canvas);
+        if (showGrid) paintGrids(canvas);
 
         canvas.setFont(oldFont);
         canvas.setPaint(oldPaint);
@@ -137,22 +160,22 @@ public class GraphicsDisplay extends JPanel {
         for (Double[] point : graphicsData) {
             GeneralPath marker = new GeneralPath();
             if (showMarkersCondition && point[1].intValue()%2==0 && point[1].intValue()!=0)
-                canvas.setColor(Color.RED);
+                canvas.setColor(Color.red);
             else
                 canvas.setColor(Color.blue);
             Point2D.Double center = xyToPoint(point[0],point[1]);
-            marker.moveTo(center.getX() + 2.75, center.getY() - 7);
+            marker.moveTo(center.getX() + 2.75, center.getY() - 5);
             marker.lineTo(marker.getCurrentPoint().getX() - 5.5, marker.getCurrentPoint().getY());
-            marker.moveTo(marker.getCurrentPoint().getX(), marker.getCurrentPoint().getY() + 14);
+            marker.moveTo(marker.getCurrentPoint().getX(), marker.getCurrentPoint().getY() + 10);
             marker.lineTo(marker.getCurrentPoint().getX() + 5.5, marker.getCurrentPoint().getY());
             marker.moveTo(center.getX(), marker.getCurrentPoint().getY());
-            marker.lineTo(marker.getCurrentPoint().getX(), marker.getCurrentPoint().getY() - 14);
-            marker.moveTo(center.getX() - 7, center.getY() + 2.75);
+            marker.lineTo(marker.getCurrentPoint().getX(), marker.getCurrentPoint().getY() - 10);
+            marker.moveTo(center.getX() - 5, center.getY() + 2.75);
             marker.lineTo(marker.getCurrentPoint().getX(), marker.getCurrentPoint().getY() - 5.5);
-            marker.moveTo(marker.getCurrentPoint().getX() + 14, marker.getCurrentPoint().getY());
+            marker.moveTo(marker.getCurrentPoint().getX() + 10, marker.getCurrentPoint().getY());
             marker.lineTo(marker.getCurrentPoint().getX(), marker.getCurrentPoint().getY() + 5.5);
             marker.moveTo(marker.getCurrentPoint().getX(), center.getY());
-            marker.lineTo(marker.getCurrentPoint().getX() - 14, marker.getCurrentPoint().getY());
+            marker.lineTo(marker.getCurrentPoint().getX() - 10, marker.getCurrentPoint().getY());
             canvas.draw(marker);
         }
         repaint();
@@ -174,6 +197,9 @@ public class GraphicsDisplay extends JPanel {
             arrow.closePath();
             canvas.draw(arrow);
             canvas.fill(arrow);
+            Rectangle2D bounds = axisFont.getStringBounds("y", context);
+            Point2D.Double labelPos = xyToPoint(0, maxY);
+            canvas.drawString("y", (float)labelPos.getX() + 10, (float)(labelPos.getY() - bounds.getY()));
         }
         if (minY<=0.0 && maxY>=0.0) {
             canvas.draw(new Line2D.Double(xyToPoint(minX, 0), xyToPoint(maxX, 0)));
@@ -185,6 +211,10 @@ public class GraphicsDisplay extends JPanel {
             arrow.closePath();
             canvas.draw(arrow);
             canvas.fill(arrow);
+            Rectangle2D bounds = axisFont.getStringBounds("x", context);
+            Point2D.Double labelPos = xyToPoint(maxX, 0);
+            canvas.drawString("x", (float)(labelPos.getX()-bounds.getWidth()-10), (float)(labelPos.getY() + bounds.getY()));
+
         }
 
     }
@@ -193,7 +223,7 @@ public class GraphicsDisplay extends JPanel {
 
         if (showMarkers) {
             canvas.setStroke(modifiedGraphicsStroke);
-            canvas.setColor(Color.gray);
+            canvas.setColor(Color.green.darker());
         }
         else {
             canvas.setStroke(graphicsStroke);
@@ -211,6 +241,16 @@ public class GraphicsDisplay extends JPanel {
             }
         }
         canvas.draw(graphics);
+    }
+
+    protected void rotatePanel(Graphics2D canvas) {
+        canvas.translate(0, getHeight());
+        canvas.rotate(-Math.PI/2);
+    }
+
+    protected void paintGrids(Graphics2D canvas) {
+        canvas.setStroke(gridStroke);
+        canvas.setColor(Color.gray);
     }
 
     protected Point2D.Double xyToPoint(double x, double y) {
