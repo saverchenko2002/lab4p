@@ -28,10 +28,10 @@ public class GraphicsDisplay extends JPanel {
     private final Font axisFont;
     private final Font gridFont;
 
-    private double minX;
-    private double maxX;
-    private double minY;
-    private double maxY;
+    private Double minX;
+    private Double maxX;
+    private Double minY;
+    private Double maxY;
 
     private double scale;
     private double scaleX;
@@ -294,9 +294,9 @@ public class GraphicsDisplay extends JPanel {
                     (float)(labelPosXRight.getY())-5);
             canvas.drawString(formatterX.format(currentValueXModified),(float)(labelPosXLeft.getX()-boundsX.getX()-15),
                     (float)(labelPosXLeft.getY())-5);
-            canvas.drawString(formatterY.format(currentValueY),(float)(labelPosYUp.getX()-boundsY.getX()),
+            canvas.drawString(formatterY.format(currentValueY),(float)(labelPosYUp.getX()-boundsY.getX()+10),
                     (float)(labelPosYUp.getY()-boundsY.getY()));
-            canvas.drawString(formatterY.format(currentValueYModified),(float)(labelPosYDown.getX()-boundsY.getX()),
+            canvas.drawString(formatterY.format(currentValueYModified),(float)(labelPosYDown.getX()-boundsY.getX()+10),
                     (float)(labelPosYDown.getY()-boundsY.getY()));
             currentValueYIn=0;
             counter=0;
@@ -380,5 +380,21 @@ public class GraphicsDisplay extends JPanel {
         Point2D.Double dest = new Point2D.Double();
         dest.setLocation(src.getX() + deltaX, src.getY() + deltaY);
         return dest;
+    }
+
+    public String getIncrX() {
+        return Double.toString((maxX-minX)/20);
+    }
+
+    public String getIncrY() {
+        return Double.toString((maxY-minY)/20);
+    }
+
+    public Double getIncrXDouble() {
+        return (maxX-minX)/20;
+    }
+
+    public Double getIncrYDouble() {
+        return (maxY-minY)/20;
     }
 }

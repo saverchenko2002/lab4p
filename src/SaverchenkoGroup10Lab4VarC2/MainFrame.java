@@ -98,12 +98,24 @@ public class MainFrame extends JFrame {
         showGridItem.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent e) {
                 if (showGridItem.isSelected()) {
-                    String valueX = JOptionPane.showInputDialog(MainFrame.this, "Введите сколько знаков после запятой в Х", "Ограничение Х", JOptionPane.QUESTION_MESSAGE);
-                    display.setXDigits(Integer.parseInt(valueX));
-                    String valueY = JOptionPane.showInputDialog(MainFrame.this, "Введите сколько знаков после запятой в Y", "Ограничение Y", JOptionPane.QUESTION_MESSAGE);
-                    display.setYDigits(Integer.parseInt(valueY));
+                    String valueX = JOptionPane.showInputDialog(MainFrame.this,
+                            "Введите сколько знаков после запятой в Х:\nminX-" + display.getIncrX(), "Ограничение Х", JOptionPane.QUESTION_MESSAGE);
+                    String valueY = JOptionPane.showInputDialog(MainFrame.this,
+                            "Введите сколько знаков после запятой в Y:\nminY-" + display.getIncrY(), "Ограничение Y", JOptionPane.QUESTION_MESSAGE);
+                    if ((display.getIncrXDouble().intValue()==0 && display.getIncrXDouble()>Double.parseDouble(valueX) )||
+                            (display.getIncrYDouble().intValue()==0 && display.getIncrYDouble()>Double.parseDouble(valueY))) {
+                        JOptionPane.showMessageDialog(MainFrame.this,
+                                "В минимальном значении знак на дальнем разряде", "Ошибочный ввод числа знаков", JOptionPane.WARNING_MESSAGE);
+                        showGridItem.setSelected(false);
+                    }
+                    else {
+                        display.setXDigits(Integer.parseInt(valueX));
+                        display.setYDigits(Integer.parseInt(valueY));
+                        display.setShowGrid(showGridItem.isSelected());
+                    }
                 }
-                display.setShowGrid(showGridItem.isSelected());
+                else
+                    display.setShowGrid(showGridItem.isSelected());
             }
         });
 
