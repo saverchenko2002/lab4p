@@ -14,15 +14,16 @@ public class MainFrame extends JFrame {
     private static final int WIDTH = 500;
     private static final int HEIGHT = 500;
 
-    JMenuItem modify;
-    JMenuItem modifyCondition;
-    JMenuItem showGrid;
-    JMenuItem turnLeft;
-    JMenuItem showAxis;
-    JMenuItem setToDefault;
+    JMenuItem modifyItem;
+    JMenuItem modifyConditionItem;
+    JMenuItem showGridItem;
+    JMenuItem turnLeftItem;
+    JMenuItem showAxisItem;
+    JMenuItem setToDefaultItem;
 
     private JFileChooser fileChooser = null;
     private boolean fileLoaded = false;
+
     GraphicsDisplay display = new GraphicsDisplay();
     GraphicsMenuListener menu = new GraphicsMenuListener();
 
@@ -47,7 +48,7 @@ public class MainFrame extends JFrame {
             public void actionPerformed(ActionEvent e) {
                 if (fileChooser == null) {
                     fileChooser = new JFileChooser();
-                    fileChooser.setCurrentDirectory(new File("C:\\Users\\SergeySaber\\IdeaProjects\\untitled"));
+                    fileChooser.setCurrentDirectory(new File("C:\\Users\\SergeySaber\\IdeaProjects\\lab4p"));
                     FileNameExtensionFilter filter = new FileNameExtensionFilter("bin files", "bin");
                     fileChooser.setFileFilter(filter);
                 }
@@ -55,6 +56,7 @@ public class MainFrame extends JFrame {
                     openGraphics(fileChooser.getSelectedFile());
             }
         });
+
         JMenuItem close = file.add(new JMenuItem("Выход"));
         close.setAccelerator(KeyStroke.getKeyStroke("ctrl E"));
         close.addActionListener(new ActionListener() {
@@ -63,63 +65,70 @@ public class MainFrame extends JFrame {
             }
         });
 
-        showAxis = graphics.add(new JCheckBoxMenuItem("Показать оси"));
-        showAxis.setSelected(true);
-        showAxis.addActionListener(new ActionListener() {
+        showAxisItem = graphics.add(new JCheckBoxMenuItem("Показать оси"));
+        showAxisItem.setSelected(true);
+        showAxisItem.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent e) {
-                display.setShowAxis(showAxis.isSelected());
+                display.setShowAxis(showAxisItem.isSelected());
             }
         });
 
-        modify = graphics.add(new JCheckBoxMenuItem("Модификация отображения"));
-        modify.addActionListener(new ActionListener() {
+        modifyItem = graphics.add(new JCheckBoxMenuItem("Модификация отображения"));
+        modifyItem.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent e) {
-                display.setShowMarkers(modify.isSelected());
+                display.setDefaultCondition(modifyItem.isSelected());
             }
         });
 
-        modifyCondition = graphics.add(new JCheckBoxMenuItem("Модификация отображения с условием"));
-        modifyCondition.addActionListener(new ActionListener() {
+        modifyConditionItem = graphics.add(new JCheckBoxMenuItem("Модификация отображения с условием"));
+        modifyConditionItem.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent e) {
-                display.setShowMarkersCondition(modifyCondition.isSelected());
+                display.setModifiedCondition(modifyConditionItem.isSelected());
             }
         });
 
-        turnLeft = graphics.add(new JCheckBoxMenuItem("Поворот влево на 90°"));
-        turnLeft.addActionListener(new ActionListener() {
+        turnLeftItem = graphics.add(new JCheckBoxMenuItem("Поворот влево на 90°"));
+        turnLeftItem.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent e) {
-                display.setTurnGraph(turnLeft.isSelected());
+                display.setTurnGraph(turnLeftItem.isSelected());
             }
         });
 
-        showGrid = graphics.add(new JCheckBoxMenuItem("Показать сетку"));
-        showGrid.addActionListener(new ActionListener() {
+        showGridItem = graphics.add(new JCheckBoxMenuItem("Показать сетку"));
+        showGridItem.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent e) {
-                display.setShowGrid(showGrid.isSelected());
+                if (showGridItem.isSelected()) {
+                    String valueX = JOptionPane.showInputDialog(MainFrame.this, "Введите сколько знаков после запятой в Х", "Ограничение Х", JOptionPane.QUESTION_MESSAGE);
+                    display.setXDigits(Integer.parseInt(valueX));
+                    String valueY = JOptionPane.showInputDialog(MainFrame.this, "Введите сколько знаков после запятой в Y", "Ограничение Y", JOptionPane.QUESTION_MESSAGE);
+                    display.setYDigits(Integer.parseInt(valueY));
+                }
+                display.setShowGrid(showGridItem.isSelected());
             }
         });
 
-        setToDefault = graphics.add(new JMenuItem("Отменить все изменения"));
-        setToDefault.setEnabled(false);
-        setToDefault.addActionListener(new ActionListener() {
+        setToDefaultItem = graphics.add(new JMenuItem("Отменить все изменения"));
+        setToDefaultItem.setEnabled(false);
+        setToDefaultItem.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent e) {
                 menu.menuGlobal(false);
-                setToDefault.setEnabled(false);
+                setToDefaultItem.setEnabled(false);
             }
         });
-        getContentPane().add(display, BorderLayout.CENTER);
+        setToDefaultItem.setAccelerator(KeyStroke.getKeyStroke("ctrl C"));
 
+        getContentPane().add(display, BorderLayout.CENTER);
     }
 
-    public void menuStatus (){
+    public void menuStatusOnline (){
 
-        setToDefault.setEnabled(menu.atLeastOne());
-        if (modify.isSelected())
-            modifyCondition.setEnabled(true);
+        setToDefaultItem.setEnabled(menu.atLeastOneIsSelected());
+        if (modifyItem.isSelected())
+            modifyConditionItem.setEnabled(true);
         else {
-            modifyCondition.setSelected(false);
-            modifyCondition.setEnabled(false);
-            display.setShowMarkersCondition(false);
+            modifyConditionItem.setSelected(false);
+            modifyConditionItem.setEnabled(false);
+            display.setModifiedCondition(false);
         }
     }
 
@@ -157,36 +166,39 @@ public class MainFrame extends JFrame {
         frame.setDefaultCloseOperation(EXIT_ON_CLOSE);
         frame.setVisible(true);
         while(frame.isVisible())
-            frame.menuStatus();
+            frame.menuStatusOnline();
     }
 
     private class GraphicsMenuListener implements MenuListener {
 
         public void menuSelected(MenuEvent e) {
-            turnLeft.setEnabled(fileLoaded);
-            modify.setEnabled(fileLoaded);
-            modifyCondition.setEnabled(false);
-            showGrid.setEnabled(fileLoaded);
+            turnLeftItem.setEnabled(fileLoaded);
+            modifyItem.setEnabled(fileLoaded);
+            modifyConditionItem.setEnabled(false);
+            showGridItem.setEnabled(fileLoaded);
         }
 
-        public void menuGlobal(boolean off){
-            turnLeft.setSelected(off);
-            modify.setSelected(off);
-            display.setShowMarkers(off);
-            modifyCondition.setSelected(off);
-            showGrid.setSelected(off);
-            display.setTurnGraph(off);
-            turnLeft.setSelected(off);
+        public void menuGlobal(boolean off) {
+
+            showAxisItem.setSelected(!off);
+
+            modifyItem.setSelected(off);
+            modifyConditionItem.setSelected(off);
+            turnLeftItem.setSelected(off);
+            showGridItem.setSelected(off);
+
             display.setShowAxis(!off);
-            showAxis.setSelected(!off);
+            display.setDefaultCondition(off);
+            display.setTurnGraph(off);
+            display.setShowGrid(off);
         }
 
-        public boolean atLeastOne(){
-            if (turnLeft.isSelected() || modify.isSelected())
+        public boolean atLeastOneIsSelected(){
+            if (turnLeftItem.isSelected() || modifyItem.isSelected())
                 return true;
-            else if (!showAxis.isSelected())
+            else if (!showAxisItem.isSelected())
                 return true;
-            else return modifyCondition.isSelected() || showGrid.isSelected();
+            else return modifyConditionItem.isSelected() || showGridItem.isSelected();
         }
 
         public void menuDeselected(MenuEvent e) {}

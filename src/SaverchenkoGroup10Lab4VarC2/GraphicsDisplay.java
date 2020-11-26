@@ -4,25 +4,29 @@ import javax.swing.*;
 import java.awt.*;
 import java.awt.font.FontRenderContext;
 import java.awt.geom.*;
+import java.text.DecimalFormat;
+import java.text.DecimalFormatSymbols;
+import java.text.NumberFormat;
 
 public class GraphicsDisplay extends JPanel {
 
     private Double[][] graphicsData;
-    private final int countDiv = 20;
 
     private boolean showAxis = true;
-    private boolean showMarkers = false;
-    private boolean showMarkersCondition = false;
+    private boolean showDefaultCondition = false;
+    private boolean showModifiedCondition = false;
     private boolean showGrid = false;
     private boolean turnGraph = false;
 
-    private BasicStroke axisStroke;
-    private BasicStroke modifiedGraphicsStroke;
-    private BasicStroke markerStroke;
-    private BasicStroke graphicsStroke;
-    private BasicStroke gridStroke;
+    private final BasicStroke axisStroke;
+    private final BasicStroke modifiedGraphicsStroke;
+    private final BasicStroke markerStroke;
+    private final BasicStroke graphicsStroke;
+    private final BasicStroke gridStroke;
+    private final BasicStroke gridStrokeMin;
 
-    private Font axisFont;
+    private final Font axisFont;
+    private final Font gridFont;
 
     private double minX;
     private double maxX;
@@ -30,24 +34,33 @@ public class GraphicsDisplay extends JPanel {
     private double maxY;
 
     private double scale;
-    private  double scaleX;
-    private  double scaleY;
+    private double scaleX;
+    private double scaleY;
+
+    private final DecimalFormat formatterX = (DecimalFormat) NumberFormat.getInstance();
+    private final DecimalFormat formatterY = (DecimalFormat) NumberFormat.getInstance();
 
     public GraphicsDisplay () {
-
         setBackground(Color.WHITE);
-        /*buttCap - прямой roundCap - закругленный squareCap - добавляет полуквадрат в конце линии
-        xf - width
-        miterJoin - острое пересечение roundJoint - закругленное bevelJoin - квадратное нужны для пересечения линий
-        miterLimit - 10 f если угол между двумя линиями <=11 градусов то угла нет ???
-        dash_phase Определение того, как создать штриховой узор путем чередования непрозрачных и прозрачных участков.
-        fond bold font italic - жирный или курсив PLAINT - DEFAULT */
         graphicsStroke = new BasicStroke(3f, BasicStroke.CAP_ROUND, BasicStroke.JOIN_ROUND);
         axisStroke = new BasicStroke(2f,BasicStroke.CAP_BUTT, BasicStroke.JOIN_MITER);
-        axisFont = new Font(Font.SANS_SERIF, Font.PLAIN, 36);
-        modifiedGraphicsStroke = new BasicStroke(3f, BasicStroke.CAP_ROUND, BasicStroke.JOIN_ROUND, 10f,new float[] {18,5,5,5,12,5,5,5}, 0f);
-        markerStroke = new BasicStroke(1f);
-        gridStroke = new BasicStroke(1f,BasicStroke.CAP_BUTT,BasicStroke.JOIN_BEVEL, 10f, new float[]{1}, 0f);
+        axisFont = new Font(Font.SANS_SERIF, Font.PLAIN+Font.ITALIC, 36);
+        modifiedGraphicsStroke = new BasicStroke(3f, BasicStroke.CAP_ROUND, BasicStroke.JOIN_ROUND,
+                10f,new float[] {18,5,5,5,12,5,5,5}, 0f);
+        markerStroke = new BasicStroke(2f);
+        gridStroke = new BasicStroke(1f,BasicStroke.CAP_BUTT,BasicStroke.JOIN_BEVEL,
+                10f, new float[]{1}, 0f);
+        gridFont = new Font(Font.SANS_SERIF, Font.ITALIC, 18);
+        gridStrokeMin = new BasicStroke(1f);
+
+        formatterX.setGroupingUsed(false);
+        formatterY.setGroupingUsed(false);
+        DecimalFormatSymbols dottedDoubleX = formatterX.getDecimalFormatSymbols();
+        DecimalFormatSymbols dottedDoubleY = formatterY.getDecimalFormatSymbols();
+        dottedDoubleX.setDecimalSeparator('.');
+        formatterX.setDecimalFormatSymbols(dottedDoubleX);
+        dottedDoubleY.setDecimalSeparator('.');
+        formatterY.setDecimalFormatSymbols(dottedDoubleY);
     }
 
     public void showGraphics(Double[][] graphicsData) {
@@ -60,13 +73,13 @@ public class GraphicsDisplay extends JPanel {
         repaint();
     }
 
-    public void setShowMarkers(boolean showMarkers) {
-        this.showMarkers = showMarkers;
+    public void setDefaultCondition(boolean showDefaultCondition) {
+        this.showDefaultCondition = showDefaultCondition;
         repaint();
     }
 
-    public void setShowMarkersCondition(boolean showMarkersCondition) {
-        this.showMarkersCondition = showMarkersCondition;
+    public void setModifiedCondition(boolean showModifiedCondition) {
+        this.showModifiedCondition = showModifiedCondition;
         repaint();
     }
 
@@ -143,7 +156,7 @@ public class GraphicsDisplay extends JPanel {
         if (turnGraph) rotatePanel(canvas);
         if (showAxis) paintAxis(canvas);
         paintGraphics(canvas);
-        if (showMarkers) paintMarkers(canvas);
+        if (showDefaultCondition) paintMarkers(canvas);
         if (showGrid) paintGrids(canvas);
 
         canvas.setFont(oldFont);
@@ -159,7 +172,7 @@ public class GraphicsDisplay extends JPanel {
 
         for (Double[] point : graphicsData) {
             GeneralPath marker = new GeneralPath();
-            if (showMarkersCondition && point[1].intValue()%2==0 && point[1].intValue()!=0)
+            if (showModifiedCondition && point[1].intValue()%2==0 && point[1].intValue()!=0)
                 canvas.setColor(Color.red);
             else
                 canvas.setColor(Color.blue);
@@ -216,12 +229,11 @@ public class GraphicsDisplay extends JPanel {
             canvas.drawString("x", (float)(labelPos.getX()-bounds.getWidth()-10), (float)(labelPos.getY() + bounds.getY()));
 
         }
-
     }
 
     protected void paintGraphics(Graphics2D canvas) {
 
-        if (showMarkers) {
+        if (showDefaultCondition) {
             canvas.setStroke(modifiedGraphicsStroke);
             canvas.setColor(Color.green.darker());
         }
@@ -243,14 +255,111 @@ public class GraphicsDisplay extends JPanel {
         canvas.draw(graphics);
     }
 
-    protected void rotatePanel(Graphics2D canvas) {
+    protected void rotatePanel(Graphics2D canvas){
         canvas.translate(0, getHeight());
         canvas.rotate(-Math.PI/2);
     }
 
-    protected void paintGrids(Graphics2D canvas) {
-        canvas.setStroke(gridStroke);
+    protected void paintGrids(Graphics2D canvas){
+        canvas.setFont(gridFont);
+        FontRenderContext context = canvas.getFontRenderContext();
         canvas.setColor(Color.gray);
+        double currentValueX=0;
+        double currentValueY=0;
+        double incrementX = (maxX-minX)/20;
+        double incrementY = (maxY-minY)/20;
+        double incrementXIn = Double.parseDouble(formatterX.format(incrementX))/10;
+        double incrementYIn = Double.parseDouble(formatterY.format(incrementY))/10;
+        double currentValueXModified = -Double.parseDouble(formatterX.format(incrementX));
+        double currentValueYModified = -Double.parseDouble(formatterY.format(incrementY));
+        int counter;
+        double currentValueXIn;
+        double currentValueYIn;
+
+        while((currentValueX<maxX || currentValueY<maxY) || (-currentValueX>minX || -currentValueY>minY)) {
+            canvas.setStroke(gridStroke);
+            String formattedDoubleX = formatterX.format(currentValueX);
+            String formattedDoubleY = formatterY.format(currentValueY);
+            canvas.draw(new Line2D.Double(xyToPoint(currentValueX,minY),xyToPoint(currentValueX,maxY)));
+            canvas.draw(new Line2D.Double(xyToPoint(-currentValueX,minY),xyToPoint(-currentValueX,maxY)));
+            canvas.draw(new Line2D.Double(xyToPoint(minX,currentValueY),xyToPoint(maxX,currentValueY)));
+            canvas.draw(new Line2D.Double(xyToPoint(minX,-currentValueY),xyToPoint(maxX,-currentValueY)));
+            Rectangle2D boundsX = gridFont.getStringBounds(formattedDoubleX,context);
+            Rectangle2D boundsY = gridFont.getStringBounds(formattedDoubleY,context);
+            Point2D.Double labelPosXRight = xyToPoint(-currentValueXModified,0);
+            Point2D.Double labelPosXLeft = xyToPoint(currentValueXModified,0);
+            Point2D.Double labelPosYUp = xyToPoint(0,currentValueY);
+            Point2D.Double labelPosYDown = xyToPoint(0,currentValueYModified);
+            canvas.drawString(formatterX.format(-currentValueXModified),(float)(labelPosXRight.getX()-15),
+                    (float)(labelPosXRight.getY())-5);
+            canvas.drawString(formatterX.format(currentValueXModified),(float)(labelPosXLeft.getX()-boundsX.getX()-15),
+                    (float)(labelPosXLeft.getY())-5);
+            canvas.drawString(formatterY.format(currentValueY),(float)(labelPosYUp.getX()-boundsY.getX()),
+                    (float)(labelPosYUp.getY()-boundsY.getY()));
+            canvas.drawString(formatterY.format(currentValueYModified),(float)(labelPosYDown.getX()-boundsY.getX()),
+                    (float)(labelPosYDown.getY()-boundsY.getY()));
+            currentValueYIn=0;
+            counter=0;
+            canvas.setStroke(gridStrokeMin);
+            while(currentValueYIn<=maxY || -currentValueYIn>minY) {
+                if ((counter+15)%10==0) {
+                    canvas.draw(new Line2D.Double(shiftPoint(xyToPoint(currentValueX, currentValueYIn), -6, 0),
+                            shiftPoint(xyToPoint(currentValueX, currentValueYIn), 6, 0)));
+                    canvas.draw(new Line2D.Double(shiftPoint(xyToPoint(currentValueX, -currentValueYIn), -6, 0),
+                            shiftPoint(xyToPoint(currentValueX, -currentValueYIn), 6, 0)));
+                    canvas.draw(new Line2D.Double(shiftPoint(xyToPoint(-currentValueX, currentValueYIn), -6, 0),
+                            shiftPoint(xyToPoint(-currentValueX, currentValueYIn), 6, 0)));
+                    canvas.draw(new Line2D.Double(shiftPoint(xyToPoint(-currentValueX, -currentValueYIn), -6, 0),
+                            shiftPoint(xyToPoint(-currentValueX, -currentValueYIn), 6, 0)));
+                }
+                else
+                {
+                    canvas.draw(new Line2D.Double(shiftPoint(xyToPoint(currentValueX, currentValueYIn),-3,0),
+                            shiftPoint(xyToPoint(currentValueX, currentValueYIn),3,0)));
+                    canvas.draw(new Line2D.Double(shiftPoint(xyToPoint(currentValueX, -currentValueYIn),-3,0),
+                            shiftPoint(xyToPoint(currentValueX, -currentValueYIn),3,0)));
+                    canvas.draw(new Line2D.Double(shiftPoint(xyToPoint(-currentValueX, currentValueYIn), -3, 0),
+                            shiftPoint(xyToPoint(-currentValueX, currentValueYIn), 3, 0)));
+                    canvas.draw(new Line2D.Double(shiftPoint(xyToPoint(-currentValueX, -currentValueYIn), -3, 0),
+                            shiftPoint(xyToPoint(-currentValueX, -currentValueYIn), 3, 0)));
+                }
+                counter++;
+                currentValueYIn+=incrementYIn;
+            }
+
+            counter=0;
+            currentValueXIn=0;
+            while(currentValueXIn<=maxX || -currentValueXIn>minX) {
+                if ((counter+15)%10==0) {
+                    canvas.draw(new Line2D.Double(shiftPoint(xyToPoint(currentValueXIn, currentValueY), 0, -6),
+                            shiftPoint(xyToPoint(currentValueXIn, currentValueY), 0, 6)));
+                    canvas.draw(new Line2D.Double(shiftPoint(xyToPoint(currentValueXIn, -currentValueY), 0, -6),
+                            shiftPoint(xyToPoint(currentValueXIn, -currentValueY), 0, 6)));
+                    canvas.draw(new Line2D.Double(shiftPoint(xyToPoint(-currentValueXIn, currentValueY), 0, -6),
+                            shiftPoint(xyToPoint(-currentValueXIn, currentValueY), 0, 6)));
+                    canvas.draw(new Line2D.Double(shiftPoint(xyToPoint(-currentValueXIn, -currentValueY), 0, -6),
+                            shiftPoint(xyToPoint(-currentValueXIn, -currentValueY), 0, 6)));
+                }
+                else
+                {
+                    canvas.draw(new Line2D.Double(shiftPoint(xyToPoint(currentValueXIn, currentValueY), 0, -3),
+                            shiftPoint(xyToPoint(currentValueXIn, currentValueY), 0, 3)));
+                    canvas.draw(new Line2D.Double(shiftPoint(xyToPoint(currentValueXIn, -currentValueY), 0, -3),
+                            shiftPoint(xyToPoint(currentValueXIn, -currentValueY), 0, 3)));
+                    canvas.draw(new Line2D.Double(shiftPoint(xyToPoint(-currentValueXIn, currentValueY), 0, -3),
+                            shiftPoint(xyToPoint(-currentValueXIn, currentValueY), 0, 3)));
+                    canvas.draw(new Line2D.Double(shiftPoint(xyToPoint(-currentValueXIn, -currentValueY), 0, -3),
+                            shiftPoint(xyToPoint(-currentValueXIn, -currentValueY), 0, 3)));
+                }
+                counter++;
+                currentValueXIn+=incrementXIn;
+            }
+
+            currentValueY += Double.parseDouble(formatterY.format(incrementY));
+            currentValueX += Double.parseDouble(formatterX.format(incrementX));
+            currentValueXModified -= Double.parseDouble(formatterX.format(incrementX));
+            currentValueYModified -= Double.parseDouble(formatterY.format(incrementY));
+        }
     }
 
     protected Point2D.Double xyToPoint(double x, double y) {
@@ -259,4 +368,17 @@ public class GraphicsDisplay extends JPanel {
         return new Point2D.Double(deltaX*scale, deltaY*scale);
     }
 
+    public void setXDigits(int x){
+        formatterX.setMaximumFractionDigits(x);
+    }
+
+    public void setYDigits(int y){
+        formatterY.setMaximumFractionDigits(y);
+    }
+
+    protected Point2D.Double shiftPoint(Point2D.Double src, double deltaX, double deltaY) {
+        Point2D.Double dest = new Point2D.Double();
+        dest.setLocation(src.getX() + deltaX, src.getY() + deltaY);
+        return dest;
+    }
 }
